@@ -16,6 +16,7 @@ public class UsuariosModelAssembler extends RepresentationModelAssemblerSupport<
         super(UsuariosController.class, (Class<EntityModel<Usuarios>>) (Class<?>) EntityModel.class);
     }
 
+    @SuppressWarnings("null")
     @Override
     public EntityModel<Usuarios> toModel(Usuarios usuario) {
         // Crea un EntityModel a partir del objeto "Usuarios"
