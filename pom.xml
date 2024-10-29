@@ -62,8 +62,8 @@
 		</dependency>
 		<dependency>
 			<groupId>com.oracle.database.jdbc</groupId>
-			<artifactId>ojdbc8</artifactId>
-			<version>21.1.0.0</version>
+			<artifactId>ojdbc11</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 
 		<dependency>
