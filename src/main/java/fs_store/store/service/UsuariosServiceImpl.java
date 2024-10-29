@@ -2,24 +2,18 @@ package fs_store.store.service;
 
 import fs_store.store.model.Usuarios;
 import fs_store.store.repository.UsuariosRepository;
-import fs_store.store.service.UsuariosService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import jakarta.transaction.Transactional;
 
-@SuppressWarnings("unused")
 @Service
 @Transactional
 public class UsuariosServiceImpl implements UsuariosService {
 
     @Autowired
     private UsuariosRepository usuariosRepository;
-
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
 
     // Método para obtener todos los usuarios
     @Override
@@ -36,8 +30,7 @@ public class UsuariosServiceImpl implements UsuariosService {
     // Método para crear un nuevo usuario
     @Override
     public Usuarios crearUsuario(Usuarios usuario) {
-        String encodedPassword = passwordEncoder.encode(usuario.getPassword());
-        usuario.setPassword(encodedPassword);
+        // Guardar la contraseña sin cifrar (no recomendado en producción)
         return usuariosRepository.save(usuario);
     }
 
@@ -51,15 +44,12 @@ public class UsuariosServiceImpl implements UsuariosService {
                     usuario.setRol(usuarioActualizado.getRol());
                     usuario.setDireccionDespacho(usuarioActualizado.getDireccionDespacho());
                     if (usuarioActualizado.getPassword() != null && !usuarioActualizado.getPassword().isEmpty()) {
-                        String encodedPassword = passwordEncoder.encode(usuarioActualizado.getPassword());
-                        usuario.setPassword(encodedPassword);
+                        usuario.setPassword(usuarioActualizado.getPassword());
                     }
                     return usuariosRepository.save(usuario);
                 })
                 .orElseGet(() -> {
                     usuarioActualizado.setId(id);
-                    String encodedPassword = passwordEncoder.encode(usuarioActualizado.getPassword());
-                    usuarioActualizado.setPassword(encodedPassword);
                     return usuariosRepository.save(usuarioActualizado);
                 });
     }
