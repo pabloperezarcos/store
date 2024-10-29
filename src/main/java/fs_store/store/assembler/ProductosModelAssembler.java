@@ -16,6 +16,7 @@ public class ProductosModelAssembler extends RepresentationModelAssemblerSupport
         super(ProductosController.class, (Class<EntityModel<Productos>>) (Class<?>) EntityModel.class);
     }
 
+    @SuppressWarnings("null")
     @Override
     public EntityModel<Productos> toModel(Productos producto) {
         EntityModel<Productos> entityModel = EntityModel.of(producto);
