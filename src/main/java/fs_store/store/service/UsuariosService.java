@@ -22,5 +22,8 @@ public interface UsuariosService {
     void eliminarUsuario(int id);
 
     // Método para obtener un usuario por su correo electrónico
-    Optional<Usuarios> obtenerUsuarioPorCorreo(String correo);
+    Optional<Usuarios> obtenerUsuarioPorEmail(String email);
+
+    // Método para obtener un usuario por su nombre de usuario (username)
+    Optional<Usuarios> obtenerUsuarioPorUsername(String username);
 }
