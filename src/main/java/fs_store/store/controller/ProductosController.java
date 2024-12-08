@@ -4,13 +4,16 @@ import fs_store.store.assembler.ProductosModelAssembler;
 import fs_store.store.model.Productos;
 import fs_store.store.service.ProductosService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
+import jakarta.validation.Valid;
+
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/productos")
@@ -22,60 +25,50 @@ public class ProductosController {
     @Autowired
     private ProductosModelAssembler assembler;
 
-    // Endpoint para obtener todos los productos
+    // Obtener todos los productos
     @GetMapping
-    public CollectionModel<EntityModel<Productos>> obtenerProductos() {
+    public CollectionModel<EntityModel<Productos>> obtenerTodosLosProductos() {
         List<EntityModel<Productos>> productos = productosService.obtenerTodosLosProductos().stream()
                 .map(assembler::toModel)
-                .toList();
+                .collect(Collectors.toList());
 
         return CollectionModel.of(productos,
-                linkTo(methodOn(ProductosController.class).obtenerProductos()).withSelfRel());
+                linkTo(methodOn(ProductosController.class).obtenerTodosLosProductos()).withSelfRel());
     }
 
-    // Endpoint para obtener un producto por ID
+    // Obtener un producto por ID
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<Productos>> obtenerProductoPorId(@PathVariable int id) {
-        Optional<Productos> producto = productosService.obtenerProductoPorId(id);
-        return producto.map(value -> ResponseEntity.ok(assembler.toModel(value)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public EntityModel<Productos> obtenerProductoPorId(@PathVariable(value = "id") int id) {
+        Productos producto = productosService.obtenerProductoPorId(id);
+        return assembler.toModel(producto);
     }
 
-    // Endpoint para crear un nuevo producto
+    // Crear un nuevo producto
     @PostMapping
-    public ResponseEntity<EntityModel<Productos>> crearProducto(@RequestBody Productos producto) {
+    public ResponseEntity<EntityModel<Productos>> crearProducto(@Valid @RequestBody Productos producto) {
         Productos nuevoProducto = productosService.crearProducto(producto);
+        EntityModel<Productos> entityModel = assembler.toModel(nuevoProducto);
+
         return ResponseEntity
                 .created(
                         linkTo(methodOn(ProductosController.class).obtenerProductoPorId(nuevoProducto.getId())).toUri())
-                .body(assembler.toModel(nuevoProducto));
+                .body(entityModel);
     }
 
-    // Endpoint para actualizar un producto existente
+    // Actualizar un producto existente
     @PutMapping("/{id}")
-    public ResponseEntity<EntityModel<Productos>> actualizarProducto(@PathVariable int id,
-            @RequestBody Productos productoActualizado) {
-        Optional<Productos> productoOptional = productosService.obtenerProductoPorId(id);
-        if (productoOptional.isPresent()) {
-            Productos producto = productosService.actualizarProducto(id, productoActualizado);
-            return ResponseEntity.ok(assembler.toModel(producto));
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<EntityModel<Productos>> actualizarProducto(@PathVariable(value = "id") int id,
+            @Valid @RequestBody Productos productoDetalles) {
+        Productos actualizadoProducto = productosService.actualizarProducto(id, productoDetalles);
+        EntityModel<Productos> entityModel = assembler.toModel(actualizadoProducto);
+
+        return ResponseEntity.ok().body(entityModel);
     }
 
-    // Endpoint para eliminar un producto
+    // Eliminar un producto
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarProducto(@PathVariable int id) {
+    public ResponseEntity<Void> eliminarProducto(@PathVariable(value = "id") int id) {
         productosService.eliminarProducto(id);
         return ResponseEntity.noContent().build();
-    }
-
-    // Endpoint para obtener un producto por nombre
-    @GetMapping("/nombre/{nombre}")
-    public ResponseEntity<EntityModel<Productos>> obtenerProductoPorNombre(@PathVariable String nombre) {
-        Optional<Productos> producto = productosService.obtenerProductoPorNombre(nombre);
-        return producto.map(value -> ResponseEntity.ok(assembler.toModel(value)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
