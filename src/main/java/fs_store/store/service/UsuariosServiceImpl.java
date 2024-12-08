@@ -1,5 +1,6 @@
 package fs_store.store.service;
 
+import fs_store.store.exception.UsuarioNotFoundException;
 import fs_store.store.model.Usuarios;
 import fs_store.store.repository.UsuariosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ public class UsuariosServiceImpl implements UsuariosService {
     // Método para crear un nuevo usuario
     @Override
     public Usuarios crearUsuario(Usuarios usuario) {
-        // Guardar la contraseña sin cifrar (no recomendado en producción)
+        // Asignar la contraseña directamente sin encriptarla
         return usuariosRepository.save(usuario);
     }
 
@@ -40,29 +41,39 @@ public class UsuariosServiceImpl implements UsuariosService {
         return usuariosRepository.findById(id)
                 .map(usuario -> {
                     usuario.setNombre(usuarioActualizado.getNombre());
-                    usuario.setCorreo(usuarioActualizado.getCorreo());
+                    usuario.setUsername(usuarioActualizado.getUsername());
+                    usuario.setEmail(usuarioActualizado.getEmail());
                     usuario.setRol(usuarioActualizado.getRol());
-                    usuario.setDireccionDespacho(usuarioActualizado.getDireccionDespacho());
+                    usuario.setAddress(usuarioActualizado.getAddress());
+                    usuario.setImagen(usuarioActualizado.getImagen());
+
+                    // Solo actualizar la contraseña si se proporciona una nueva
                     if (usuarioActualizado.getPassword() != null && !usuarioActualizado.getPassword().isEmpty()) {
                         usuario.setPassword(usuarioActualizado.getPassword());
                     }
                     return usuariosRepository.save(usuario);
                 })
-                .orElseGet(() -> {
-                    usuarioActualizado.setId(id);
-                    return usuariosRepository.save(usuarioActualizado);
-                });
+                .orElseThrow(() -> new UsuarioNotFoundException("Usuario con ID " + id + " no encontrado"));
     }
 
     // Método para eliminar un usuario por su ID
     @Override
     public void eliminarUsuario(int id) {
+        if (!usuariosRepository.existsById(id)) {
+            throw new UsuarioNotFoundException("Usuario con ID " + id + " no encontrado");
+        }
         usuariosRepository.deleteById(id);
     }
 
     // Método para obtener un usuario por su correo electrónico
     @Override
-    public Optional<Usuarios> obtenerUsuarioPorCorreo(String correo) {
-        return usuariosRepository.findByCorreo(correo);
+    public Optional<Usuarios> obtenerUsuarioPorEmail(String email) {
+        return usuariosRepository.findByEmail(email);
+    }
+
+    // Método para obtener un usuario por su nombre de usuario (username)
+    @Override
+    public Optional<Usuarios> obtenerUsuarioPorUsername(String username) {
+        return usuariosRepository.findByUsername(username);
     }
 }
