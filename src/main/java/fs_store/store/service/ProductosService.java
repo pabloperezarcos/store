@@ -2,19 +2,27 @@ package fs_store.store.service;
 
 import fs_store.store.model.Productos;
 import java.util.List;
-import java.util.Optional;
 
 public interface ProductosService {
 
+    // Obtener todos los productos
     List<Productos> obtenerTodosLosProductos();
 
-    Optional<Productos> obtenerProductoPorId(int id);
+    // Obtener un producto por ID
+    Productos obtenerProductoPorId(int id);
 
+    // Crear un nuevo producto
     Productos crearProducto(Productos producto);
 
+    // Actualizar un producto existente
     Productos actualizarProducto(int id, Productos productoActualizado);
 
+    // Eliminar un producto
     void eliminarProducto(int id);
 
-    Optional<Productos> obtenerProductoPorNombre(String nombre);
+    // Obtener un producto por Nombre
+    Productos obtenerProductoPorNombre(String nombre);
+
+    // Obtener un producto por SKU
+    Productos obtenerProductoPorSku(String sku);
 }
