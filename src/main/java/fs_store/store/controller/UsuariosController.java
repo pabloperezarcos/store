@@ -1,6 +1,7 @@
 package fs_store.store.controller;
 
 import fs_store.store.assembler.UsuariosModelAssembler;
+import fs_store.store.exception.UsuarioNotFoundException;
 import fs_store.store.model.Usuarios;
 import fs_store.store.service.UsuariosService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,8 +9,9 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Optional;
+
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
@@ -35,32 +37,30 @@ public class UsuariosController {
 
     // Endpoint para obtener un usuario por ID
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<Usuarios>> obtenerUsuarioPorId(@PathVariable int id) {
-        Optional<Usuarios> usuario = usuariosService.obtenerUsuarioPorId(id);
-        return usuario.map(value -> ResponseEntity.ok(assembler.toModel(value)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public EntityModel<Usuarios> obtenerUsuarioPorId(@PathVariable int id) {
+        Usuarios usuario = usuariosService.obtenerUsuarioPorId(id)
+                .orElseThrow(() -> new UsuarioNotFoundException("Usuario con ID " + id + " no encontrado"));
+
+        return assembler.toModel(usuario);
     }
 
     // Endpoint para crear un nuevo usuario
     @PostMapping
-    public ResponseEntity<EntityModel<Usuarios>> crearUsuario(@RequestBody Usuarios usuario) {
+    public ResponseEntity<EntityModel<Usuarios>> crearUsuario(@Valid @RequestBody Usuarios usuario) {
         Usuarios nuevoUsuario = usuariosService.crearUsuario(usuario);
-        return ResponseEntity.created(
-                linkTo(methodOn(UsuariosController.class).obtenerUsuarioPorId(nuevoUsuario.getId())).toUri())
+
+        return ResponseEntity
+                .created(linkTo(methodOn(UsuariosController.class).obtenerUsuarioPorId(nuevoUsuario.getId())).toUri())
                 .body(assembler.toModel(nuevoUsuario));
     }
 
     // Endpoint para actualizar un usuario existente
     @PutMapping("/{id}")
     public ResponseEntity<EntityModel<Usuarios>> actualizarUsuario(@PathVariable int id,
-            @RequestBody Usuarios usuarioActualizado) {
-        Optional<Usuarios> usuarioOptional = usuariosService.obtenerUsuarioPorId(id);
-        if (usuarioOptional.isPresent()) {
-            Usuarios usuario = usuariosService.actualizarUsuario(id, usuarioActualizado);
-            return ResponseEntity.ok(assembler.toModel(usuario));
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+            @Valid @RequestBody Usuarios usuarioActualizado) {
+        Usuarios usuario = usuariosService.actualizarUsuario(id, usuarioActualizado);
+
+        return ResponseEntity.ok(assembler.toModel(usuario));
     }
 
     // Endpoint para eliminar un usuario
@@ -71,10 +71,20 @@ public class UsuariosController {
     }
 
     // Endpoint para obtener un usuario por correo electrónico
-    @GetMapping("/correo/{correo}")
-    public ResponseEntity<EntityModel<Usuarios>> obtenerUsuarioPorCorreo(@PathVariable String correo) {
-        Optional<Usuarios> usuario = usuariosService.obtenerUsuarioPorCorreo(correo);
-        return usuario.map(value -> ResponseEntity.ok(assembler.toModel(value)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    @GetMapping("/email/{email}")
+    public EntityModel<Usuarios> obtenerUsuarioPorEmail(@PathVariable String email) {
+        Usuarios usuario = usuariosService.obtenerUsuarioPorEmail(email)
+                .orElseThrow(() -> new UsuarioNotFoundException("Usuario con email " + email + " no encontrado"));
+
+        return assembler.toModel(usuario);
+    }
+
+    // Endpoint para obtener un usuario por nombre de usuario (username)
+    @GetMapping("/username/{username}")
+    public EntityModel<Usuarios> obtenerUsuarioPorUsername(@PathVariable String username) {
+        Usuarios usuario = usuariosService.obtenerUsuarioPorUsername(username)
+                .orElseThrow(() -> new UsuarioNotFoundException("Usuario con username " + username + " no encontrado"));
+
+        return assembler.toModel(usuario);
     }
 }
