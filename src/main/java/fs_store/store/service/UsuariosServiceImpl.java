@@ -4,14 +4,20 @@ import fs_store.store.exception.UsuarioNotFoundException;
 import fs_store.store.model.Usuarios;
 import fs_store.store.repository.UsuariosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import jakarta.transaction.Transactional;
+import org.springframework.security.core.userdetails.User;
 
 @Service
 @Transactional
-public class UsuariosServiceImpl implements UsuariosService {
+public class UsuariosServiceImpl implements UsuariosService, UserDetailsService {
+
+    
 
     @Autowired
     private UsuariosRepository usuariosRepository;
@@ -75,5 +81,21 @@ public class UsuariosServiceImpl implements UsuariosService {
     @Override
     public Optional<Usuarios> obtenerUsuarioPorUsername(String username) {
         return usuariosRepository.findByUsername(username);
+    }
+
+    /**
+     * Método requerido por UserDetailsService para cargar los detalles del usuario.
+     */
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Usuarios usuario = usuariosRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
+
+        // Suponiendo que 'rol' es un string como "USER" o "ADMIN"
+        return User.builder()
+                .username(usuario.getUsername())
+                .password(usuario.getPassword())
+                .roles(usuario.getRol()) // Asegúrate de que 'rol' corresponda a un rol válido
+                .build();
     }
 }
